@@ -1,0 +1,38 @@
+name: Preprocessing Workflow
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run Automated Preprocessing
+      run: |
+        # Menjalankan script automate Anda
+        python preprocessing/automate_ElRoy-Sinaga.py
+
+    - name: Commit and Push processed data
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add preprocessing/SpamEmail_preprocessing/
+        git commit -m "Auto-update: Processed dataset via GitHub Actions" || echo "No changes to commit"
+        git push
