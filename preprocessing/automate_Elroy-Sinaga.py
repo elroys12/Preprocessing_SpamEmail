@@ -22,6 +22,8 @@ logging.basicConfig(
 # DATA LOADING
 def load_data(path):
     logging.info(f"Loading dataset from {path}")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File tidak ditemukan di path: {path}")
     return pd.read_csv(path)
 
 # TEXT CLEANING
@@ -43,9 +45,9 @@ def preprocess_data(
 ):
     df = load_data(data_path)
 
-    # Validasi kolom
+    # Validasi kolom sesuai dataset Spam Email
     if 'message' not in df.columns or 'label' not in df.columns:
-        raise ValueError("Dataset harus memiliki kolom 'message' dan 'label'")
+        raise ValueError("Dataset harus memiliki kolom 'message' and 'label'")
 
     logging.info("Handling missing values")
     df = df.dropna(subset=['message', 'label'])
@@ -76,25 +78,36 @@ def preprocess_data(
 
     return X, y, tfidf, label_encoder
 
-# SAVE PREPROCESSED DATA
-def save_preprocessed_data(output_dir, **objects):
+# SAVE PREPROCESSED DATA (REVISI: Mendukung CSV dan PKL)
+def save_preprocessed_data(output_dir, X_train, X_test, y_train, y_test, tfidf, label_encoder):
     os.makedirs(output_dir, exist_ok=True)
-    for name, obj in objects.items():
-        joblib.dump(obj, os.path.join(output_dir, f"{name}.pkl"))
-    logging.info(f"Preprocessed data saved successfully in {output_dir}")
+    
+    # 1. Simpan Objek Transformer sebagai .pkl (Untuk penggunaan di model nanti)
+    joblib.dump(tfidf, os.path.join(output_dir, "tfidf_vectorizer.pkl"))
+    joblib.dump(label_encoder, os.path.join(output_dir, "label_encoder.pkl"))
+    
+    # 2. Simpan Matriks X sebagai .csv (Harus dikonversi ke Dense Array)
+    logging.info("Converting sparse matrix to CSV...")
+    pd.DataFrame(X_train.toarray()).to_csv(os.path.join(output_dir, "X_train.csv"), index=False)
+    pd.DataFrame(X_test.toarray()).to_csv(os.path.join(output_dir, "X_test.csv"), index=False)
+    
+    # 3. Simpan Label y sebagai .csv
+    pd.DataFrame(y_train, columns=['label']).to_csv(os.path.join(output_dir, "y_train.csv"), index=False)
+    pd.DataFrame(y_test, columns=['label']).to_csv(os.path.join(output_dir, "y_test.csv"), index=False)
+    
+    logging.info(f"Semua file (CSV & PKL) berhasil disimpan di: {output_dir}")
 
-# --- BAGIAN TAMBAHAN UNTUK AUTOMASI ---
+# --- EKSEKUSI ---
 if __name__ == "__main__":
-    # 1. Tentukan path file (Sesuaikan dengan nama file CSV Anda di GitHub)
-    # Gunakan path relatif agar bisa berjalan di GitHub Actions
+    # Path disesuaikan dengan struktur Linux/GitHub Actions
     DATA_INPUT_PATH = "SpamEmail_raw/SpamEmail.csv" 
     OUTPUT_DIR = "preprocessing/SpamEmail_preprocessing"
 
     try:
-        # 2. Jalankan Preprocessing
+        # Jalankan Preprocessing
         X_train, X_test, y_train, y_test, tfidf, le = preprocess_data(DATA_INPUT_PATH)
         
-        # 3. Simpan Hasilnya ke dalam folder namadataset_preprocessing
+        # Simpan Hasil dengan fungsi revisi
         save_preprocessed_data(
             OUTPUT_DIR,
             X_train=X_train,
@@ -104,7 +117,7 @@ if __name__ == "__main__":
             tfidf=tfidf,
             label_encoder=le
         )
-        logging.info("Pipeline Automasi Berhasil dijalankan!")
+        logging.info("Pipeline Automasi Berhasil dijalankan sepenuhnya!")
 
     except Exception as e:
         logging.error(f"Gagal menjalankan automasi: {e}")
