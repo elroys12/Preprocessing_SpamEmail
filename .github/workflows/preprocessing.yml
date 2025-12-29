@@ -35,7 +35,7 @@ jobs:
 
     - name: Run Automated Preprocessing
       run: |
-        # Menjalankan script automate Anda (Pastikan nama file ElRoy/Elroy sesuai)
+        # Menjalankan script automate Anda (Pastikan nama file Elroy/Elroy sesuai)
         python preprocessing/automate_ElRoy-Sinaga.py
 
     - name: Commit and Push processed data
