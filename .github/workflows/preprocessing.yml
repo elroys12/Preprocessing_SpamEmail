@@ -9,6 +9,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # Memberikan izin kepada GitHub Actions untuk menulis/push perubahan ke repositori
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout repository
@@ -22,17 +26,29 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        # Pastikan Anda memiliki requirements.txt atau tulis library langsung di sini
+        if [ -f requirements.txt ]; then 
+          pip install -r requirements.txt
+        else
+          pip install pandas scikit-learn nltk joblib
+        fi
 
     - name: Run Automated Preprocessing
       run: |
-        # Menjalankan script automate Anda
-        python preprocessing/automate_Elroy-Sinaga.py
+        # Menjalankan script automate Anda (Pastikan nama file ElRoy/Elroy sesuai)
+        python preprocessing/automate_ElRoy-Sinaga.py
 
     - name: Commit and Push processed data
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        # Konfigurasi identitas git untuk bot GitHub
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        # Menambahkan hasil folder preprocessing
         git add preprocessing/SpamEmail_preprocessing/
-        git commit -m "Auto-update: Processed dataset via GitHub Actions" || echo "No changes to commit"
+        
+        # Melakukan commit jika ada perubahan file .pkl baru
+        git commit -m "Auto-update: Processed dataset via GitHub Actions [skip ci]" || echo "No changes to commit"
+        
+        # Push perubahan kembali ke branch main
         git push
