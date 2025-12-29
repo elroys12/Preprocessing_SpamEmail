@@ -27,7 +27,7 @@ jobs:
     - name: Run Automated Preprocessing
       run: |
         # Menjalankan script automate Anda
-        python preprocessing/automate_ElRoy-Sinaga.py
+        python preprocessing/automate_Elroy-Sinaga.py
 
     - name: Commit and Push processed data
       run: |
